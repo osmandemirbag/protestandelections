@@ -1,0 +1,905 @@
+#PERIOD 1 FIELD MEASURES
+#N_WEIGHTED
+# First, define a function to vectorize the coefficients for each city
+coef_p1$n_weighted <- scale(coef_p1$n_weighted)
+coef_p1$n_weighted <- (coef_p1$n_weighted - mean(coef_p1$n_weighted)) / sd(coef_p1$n_weighted)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["n_weighted"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p1 data frame
+vectors <- t(apply(coef_p1, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p1), ncol = nrow(coef_p1))
+for (i in 1:nrow(coef_p1)) {
+  for (j in 1:nrow(coef_p1)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  1 - cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p1$n_weighted)) / 81
+F_p1_1 <- sum_dij_gij / sum_dij
+L_p1_1 <- sum_dij_gij / sum_gij
+S_p1_1 <- F_p1_1 * sum_mag
+
+#SOCASISTPERGDP
+# First, define a function to vectorize the coefficients for each city
+coef_p1$socasistpergdp <- scale(coef_p1$socasistpergdp)
+coef_p1$socasistpergdp <- (coef_p1$socasistpergdp - mean(coef_p1$socasistpergdp)) / sd(coef_p1$socasistpergdp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socasistpergdp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p1 data frame
+vectors <- t(apply(coef_p1, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p1), ncol = nrow(coef_p1))
+for (i in 1:nrow(coef_p1)) {
+  for (j in 1:nrow(coef_p1)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p1$socasistpergdp)) / 81
+F_p1_2 <- sum_dij_gij / sum_dij
+L_p1_2 <- sum_dij_gij / sum_gij
+S_p1_2 <- F_p1_2 * sum_mag
+
+
+#AV_UNEMP
+# First, define a function to vectorize the coefficients for each city
+coef_p1$av_unemp <- scale(coef_p1$av_unemp)
+coef_p1$av_unemp <- (coef_p1$av_unemp - mean(coef_p1$av_unemp)) / sd(coef_p1$av_unemp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["av_unemp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p1 data frame
+vectors <- t(apply(coef_p1, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p1), ncol = nrow(coef_p1))
+for (i in 1:nrow(coef_p1)) {
+  for (j in 1:nrow(coef_p1)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p1$av_unemp)) / 81
+F_p1_3 <- sum_dij_gij / sum_dij
+L_p1_3 <- sum_dij_gij / sum_gij
+S_p1_3 <- F_p1_3 * sum_mag
+
+#SOCECON
+# First, define a function to vectorize the coefficients for each city
+coef_p1$socecon <- scale(coef_p1$socecon)
+coef_p1$socecon <- (coef_p1$socecon - mean(coef_p1$socecon)) / sd(coef_p1$socecon)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socecon"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p1 data frame
+vectors <- t(apply(coef_p1, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p1), ncol = nrow(coef_p1))
+for (i in 1:nrow(coef_p1)) {
+  for (j in 1:nrow(coef_p1)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p1$socecon)) / 81
+F_p1_4 <- sum_dij_gij / sum_dij
+L_p1_4 <- sum_dij_gij / sum_gij
+S_p1_4 <- F_p1_4 * sum_mag
+
+
+
+
+#PERIOD 2 FIELD MEASURES
+#N_WEIGHTED
+# First, define a function to vectorize the coefficients for each city
+coef_p2$n_weighted <- scale(coef_p2$n_weighted)
+coef_p2$n_weighted <- (coef_p2$n_weighted - mean(coef_p2$n_weighted)) / sd(coef_p2$n_weighted)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["n_weighted"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p2 data frame
+vectors <- t(apply(coef_p2, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p2), ncol = nrow(coef_p2))
+for (i in 1:nrow(coef_p2)) {
+  for (j in 1:nrow(coef_p2)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p2$n_weighted)) / 81
+F_p2_1 <- sum_dij_gij / sum_dij
+L_p2_1 <- sum_dij_gij / sum_gij
+S_p2_1 <- F_p2_1 * sum_mag
+
+#SOCASISTPERGDP
+# First, define a function to vectorize the coefficients for each city
+coef_p2$socasistpergdp <- scale(coef_p2$socasistpergdp)
+coef_p2$socasistpergdp <- (coef_p2$socasistpergdp - mean(coef_p2$socasistpergdp)) / sd(coef_p2$socasistpergdp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socasistpergdp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p2 data frame
+vectors <- t(apply(coef_p2, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p2), ncol = nrow(coef_p2))
+for (i in 1:nrow(coef_p2)) {
+  for (j in 1:nrow(coef_p2)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p2$socasistpergdp)) / 81
+F_p2_2 <- sum_dij_gij / sum_dij
+L_p2_2 <- sum_dij_gij / sum_gij
+S_p2_2 <- F_p2_2 * sum_mag
+
+#AV_UNEMP
+# First, define a function to vectorize the coefficients for each city
+coef_p2$av_unemp <- scale(coef_p2$av_unemp)
+coef_p2$av_unemp <- (coef_p2$av_unemp - mean(coef_p2$av_unemp)) / sd(coef_p2$av_unemp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["av_unemp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p2 data frame
+vectors <- t(apply(coef_p2, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p2), ncol = nrow(coef_p2))
+for (i in 1:nrow(coef_p2)) {
+  for (j in 1:nrow(coef_p2)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p2$av_unemp)) / 81
+F_p2_3 <- sum_dij_gij / sum_dij
+L_p2_3 <- sum_dij_gij / sum_gij
+S_p2_3 <- F_p2_3 * sum_mag
+
+#SOCECON
+# First, define a function to vectorize the coefficients for each city
+coef_p2$socecon <- scale(coef_p2$socecon)
+coef_p2$socecon <- (coef_p2$socecon - mean(coef_p2$socecon)) / sd(coef_p2$socecon)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socecon"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p2 data frame
+vectors <- t(apply(coef_p2, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p2), ncol = nrow(coef_p2))
+for (i in 1:nrow(coef_p2)) {
+  for (j in 1:nrow(coef_p2)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p2$socecon)) / 81
+F_p2_4 <- sum_dij_gij / sum_dij
+L_p2_4 <- sum_dij_gij / sum_gij
+S_p2_4 <- F_p2_4 * sum_mag
+
+
+#PERIOD 3 FIELD MEASURES
+#N_WEIGHTED
+# First, define a function to vectorize the coefficients for each city
+coef_p3$n_weighted <- scale(coef_p3$n_weighted)
+coef_p3$n_weighted <- (coef_p3$n_weighted - mean(coef_p3$n_weighted)) / sd(coef_p3$n_weighted)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["n_weighted"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p3 data frame
+vectors <- t(apply(coef_p3, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p3), ncol = nrow(coef_p3))
+for (i in 1:nrow(coef_p3)) {
+  for (j in 1:nrow(coef_p3)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p3$n_weighted)) / 81
+F_p3_1 <- sum_dij_gij / sum_dij
+L_p3_1 <- sum_dij_gij / sum_gij
+S_p3_1 <- F_p3_1 * sum_mag
+
+#SOCASISTPERGDP
+# First, define a function to vectorize the coefficients for each city
+coef_p3$socasistpergdp <- scale(coef_p3$socasistpergdp)
+coef_p3$socasistpergdp <- (coef_p3$socasistpergdp - mean(coef_p3$socasistpergdp)) / sd(coef_p3$socasistpergdp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socasistpergdp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p3 data frame
+vectors <- t(apply(coef_p3, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p3), ncol = nrow(coef_p3))
+for (i in 1:nrow(coef_p3)) {
+  for (j in 1:nrow(coef_p3)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p3$socasistpergdp)) / 81
+F_p3_2 <- sum_dij_gij / sum_dij
+L_p3_2 <- sum_dij_gij / sum_gij
+S_p3_2 <- F_p3_2 * sum_mag
+
+
+#AV_UNEMP
+# First, define a function to vectorize the coefficients for each city
+coef_p3$av_unemp <- scale(coef_p3$av_unemp)
+coef_p3$av_unemp <- (coef_p3$av_unemp - mean(coef_p3$av_unemp)) / sd(coef_p3$av_unemp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["av_unemp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p3 data frame
+vectors <- t(apply(coef_p3, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p3), ncol = nrow(coef_p3))
+for (i in 1:nrow(coef_p3)) {
+  for (j in 1:nrow(coef_p3)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p3$av_unemp)) / 81
+F_p3_3 <- sum_dij_gij / sum_dij
+L_p3_3 <- sum_dij_gij / sum_gij
+S_p3_3 <- F_p3_3 * sum_mag
+
+
+#SOCECON
+# First, define a function to vectorize the coefficients for each city
+coef_p3$socecon <- scale(coef_p3$socecon)
+coef_p3$socecon <- (coef_p3$socecon - mean(coef_p3$socecon)) / sd(coef_p3$socecon)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socecon"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p3 data frame
+vectors <- t(apply(coef_p3, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p3), ncol = nrow(coef_p3))
+for (i in 1:nrow(coef_p3)) {
+  for (j in 1:nrow(coef_p3)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p3$socecon)) / 81
+F_p3_4 <- sum_dij_gij / sum_dij
+L_p3_4 <- sum_dij_gij / sum_gij
+S_p3_4 <- F_p3_4 * sum_mag
+
+
+
+
+#PERIOD 4 FIELD MEASURES
+#N_WEIGHTED
+# First, define a function to vectorize the coefficients for each city
+coef_p4$n_weighted <- scale(coef_p4$n_weighted)
+coef_p4$n_weighted <- (coef_p4$n_weighted - mean(coef_p4$n_weighted)) / sd(coef_p4$n_weighted)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["n_weighted"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p4 data frame
+vectors <- t(apply(coef_p4, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p4), ncol = nrow(coef_p4))
+for (i in 1:nrow(coef_p4)) {
+  for (j in 1:nrow(coef_p4)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p4$n_weighted)) / 81
+F_p4_1 <- sum_dij_gij / sum_dij
+L_p4_1 <- sum_dij_gij / sum_gij
+S_p4_1 <- F_p4_1 * sum_mag
+
+
+#SOCASISTPERGDP
+# First, define a function to vectorize the coefficients for each city
+coef_p4$socasistpergdp <- scale(coef_p4$socasistpergdp)
+coef_p4$socasistpergdp <- (coef_p4$socasistpergdp - mean(coef_p4$socasistpergdp)) / sd(coef_p4$socasistpergdp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socasistpergdp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p4 data frame
+vectors <- t(apply(coef_p4, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p4), ncol = nrow(coef_p4))
+for (i in 1:nrow(coef_p4)) {
+  for (j in 1:nrow(coef_p4)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p4$socasistpergdp)) / 81
+F_p4_2 <- sum_dij_gij / sum_dij
+L_p4_2 <- sum_dij_gij / sum_gij
+S_p4_2 <- F_p4_2 * sum_mag
+
+#AV_UNEMP
+# First, define a function to vectorize the coefficients for each city
+coef_p4$av_unemp <- scale(coef_p4$av_unemp)
+coef_p4$av_unemp <- (coef_p4$av_unemp - mean(coef_p4$av_unemp)) / sd(coef_p4$av_unemp)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["av_unemp"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p4 data frame
+vectors <- t(apply(coef_p4, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p4), ncol = nrow(coef_p4))
+for (i in 1:nrow(coef_p4)) {
+  for (j in 1:nrow(coef_p4)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p4$av_unemp)) / 81
+F_p4_3 <- sum_dij_gij / sum_dij
+L_p4_3 <- sum_dij_gij / sum_gij
+S_p4_3 <- F_p4_3 * sum_mag
+
+#SOCECON
+# First, define a function to vectorize the coefficients for each city
+coef_p4$socecon <- scale(coef_p4$socecon)
+coef_p4$socecon <- (coef_p4$socecon - mean(coef_p4$socecon)) / sd(coef_p4$socecon)
+
+# Calculate distance matrix
+coords <- period1 %>% select(X, Y) %>% as.matrix()
+dij <- spDists(coords)
+
+vectorize_coef <- function(row) {
+  b <- row["socecon"]
+  as.numeric(c(1, b))
+}
+
+# Apply the vectorize_coef function to each row of the coef_p4 data frame
+vectors <- t(apply(coef_p4, 1, vectorize_coef))
+
+# Calculate the cosine similarity matrix using the dot product formula
+cos_sim_matrix <- matrix(NA, nrow = nrow(coef_p4), ncol = nrow(coef_p4))
+for (i in 1:nrow(coef_p4)) {
+  for (j in 1:nrow(coef_p4)) {
+    vi <- vectors[i,]
+    vj <- vectors[j,]
+    dot_product <- vi %*% vj
+    norm_i <- sqrt(sum(vi^2))
+    norm_j <- sqrt(sum(vj^2))
+    cos_sim_matrix[i,j] <- dot_product / (norm_i * norm_j)
+  }
+}
+
+gij <-  cos_sim_matrix
+sum_dij_gij <- sum(dij * gij)
+sum_dij <- sum(dij)
+sum_gij <- sum(gij)
+sum_mag <- sum(abs(coef_p4$socecon)) / 81
+F_p4_4 <- sum_dij_gij / sum_dij
+L_p4_4 <- sum_dij_gij / sum_gij
+S_p4_4 <- F_p4_4 * sum_mag
+
+f_protest <- c(F_p1_1, F_p2_1, F_p3_1, F_p4_1)
+f_socasist <-  c(F_p1_2, F_p2_2, F_p3_2, F_p4_2)
+f_unemp <- c(F_p1_3, F_p2_3, F_p3_3, F_p4_3)
+f_socecon <- c(F_p1_4, F_p2_4, F_p3_4, F_p4_4)
+org <- as.data.frame(cbind(f_protest, f_socasist, f_unemp, f_socecon))
+org$period <- c(1, 2, 3, 4)
+
+l_protest <- scale(c(L_p1_1, L_p2_1, L_p3_1, L_p4_1))
+l_socasist <-  scale(c(L_p1_2, L_p2_2, L_p3_2, L_p4_2))
+l_unemp <- c(L_p1_3, L_p2_3, L_p3_3, L_p4_3)
+l_socecon <- c(L_p1_4, L_p2_4, L_p3_4, L_p4_4)
+range <- as.data.frame(cbind(l_protest, l_socasist, l_unemp, l_socecon))
+range$period <- c(1, 2, 3, 4)
+
+s_protest <- c(S_p1_1, S_p2_1, S_p3_1, S_p4_1)
+s_socasist <-  c(S_p1_2, S_p2_2, S_p3_2, S_p4_2)
+s_unemp <- c(S_p1_3, S_p2_3, S_p3_3, S_p4_3)
+s_socecon <- c(S_p1_4, S_p2_4, S_p3_4, S_p4_4)
+streng <- as.data.frame(cbind(s_protest, s_socasist, s_unemp, s_socecon))
+streng$period <- c(1, 2, 3, 4)
+
+field <- merge(org, range)
+field <- merge(field, streng)
+colnames(field)[6] <- "l_protest"
+colnames(field)[7] <- "l_socasist"
+
+library(ggplot2)
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest"), ]
+
+library(ggplot2)
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_protest" = "Organization",  "s_protest" = "Strength")
+
+plot1 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Protest Density") +
+  labs(subtitle = "Changes in Field Measures: Protest Density on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_socasist", "s_socasist"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_socasist" = "Organization",  "s_socasist" = "Strength")
+
+plot2 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Social Assistance Received per GDP") +
+  labs(subtitle = "Changes in Field Measures: Social Assistance on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_unemp", "s_unemp"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_unemp" = "Organization",  "s_unemp" = "Strength")
+
+plot3 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Economic Grievances") +
+  labs(subtitle = "Changes in Field Measures: Economic Grievances on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_socecon", "s_socecon"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_socecon" = "Organization",  "s_socecon" = "Strength")
+
+plot4 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Socioeconomic Development") +
+  labs(subtitle = "Changes in Field Measures: Socioeconomic Development on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+plot1 + plot2 + plot3 + plot4
+
+
+
+library(ggplot2)
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest", "f_socasist", "s_socasist", "f_unemp", "s_unemp", "f_socecon", "s_socecon"), ]
+
+# Plot 1
+plot1 <- ggplot(long_df[long_df$var_type %in% c("f_protest", "s_protest"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = "Value", linetype = NULL, color = NULL,
+       title = "Changes in Field Measures",
+       subtitle = "Protest Density") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+# Plot 2
+plot2 <- ggplot(long_df[long_df$var_type %in% c("f_socasist", "s_socasist"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = NULL, linetype = NULL, color = NULL,
+       subtitle = "Social Assistance per GDP") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#plot 3
+plot3 <- ggplot(long_df[long_df$var_type %in% c("f_unemp", "s_unemp"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = "Value", linetype = NULL, color = NULL,
+       subtitle = "Economic Grievances") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 20),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"))
+
+#plot 4
+plot4 <- ggplot(long_df[long_df$var_type %in% c("f_socecon", "s_socecon"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = NULL, linetype = NULL, color = NULL,
+       subtitle = "Socioeconomic Development") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 25),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"))
+        
+total_plot <- plot1 + plot2 + plot3 + plot4 
+total_plot <- plot1 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot2  + scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot3 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot4 + 
+  scale_y_continuous(limits = c(0.2, max(long_df$value)))
+total_plot
