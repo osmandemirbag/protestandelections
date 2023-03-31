@@ -1,4 +1,12 @@
 #REESF MODELS
+## Load Packages ## 
+pacman::p_load(ClustGeo, tidyverse, reshape2, readstata13, 
+                ggplot2, sf, readxl, rgdal, lme4, spgwr, 
+                spdep, pracma, geosphere, stargazer, car, 
+                performance, lme4, spmoran, automap, stringr, 
+                lubridate, magrittr, TRmaps, 
+                kableExtra, AICcmodavg)
+
 load("df_agg.Rdata")
 period1 <- df_agg %>% filter(period==1)
 period2 <- df_agg %>% filter(period==2)
