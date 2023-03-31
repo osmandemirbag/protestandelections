@@ -902,11 +902,243 @@ field_plot <- plot1 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) +
 
 
 
+library(ggplot2)
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest"), ]
+
+library(ggplot2)
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_protest" = "Organization",  "s_protest" = "Strength")
+
+plot1 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Protest Density") +
+  labs(subtitle = "Changes in Field Measures: Protest Density on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_socasist", "s_socasist"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_socasist" = "Organization",  "s_socasist" = "Strength")
+
+plot2 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Social Assistance Received per GDP") +
+  labs(subtitle = "Changes in Field Measures: Social Assistance on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_unemp", "s_unemp"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_unemp" = "Organization",  "s_unemp" = "Strength")
+
+plot3 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Economic Grievances") +
+  labs(subtitle = "Changes in Field Measures: Economic Grievances on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
 
 
 
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_socecon", "s_socecon"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_socecon" = "Organization",  "s_socecon" = "Strength")
+
+plot4 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Socioeconomic Development") +
+  labs(subtitle = "Changes in Field Measures: Socioeconomic Development on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+plot1 + plot2 + plot3 + plot4
 
 
 
+library(ggplot2)
 
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
 
+# Filter the data to keep only the variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest", "f_socasist", "s_socasist", "f_unemp", "s_unemp", "f_socecon", "s_socecon"), ]
+
+# Plot 1
+plot1 <- ggplot(long_df[long_df$var_type %in% c("f_protest", "s_protest"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = "Value", linetype = NULL, color = NULL,
+       title = "Changes in Field Measures",
+       subtitle = "Protest Density") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+# Plot 2
+plot2 <- ggplot(long_df[long_df$var_type %in% c("f_socasist", "s_socasist"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = NULL, linetype = NULL, color = NULL,
+       subtitle = "Social Assistance per GDP") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#plot 3
+plot3 <- ggplot(long_df[long_df$var_type %in% c("f_unemp", "s_unemp"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = "Value", linetype = NULL, color = NULL,
+       subtitle = "Economic Grievances") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 20),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"))
+
+#plot 4
+plot4 <- ggplot(long_df[long_df$var_type %in% c("f_socecon", "s_socecon"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = NULL, linetype = NULL, color = NULL,
+       subtitle = "Socioeconomic Development") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 25),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"))
+        
+total_plot <- plot1 + plot2 + plot3 + plot4 
+total_plot <- plot1 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot2  + scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot3 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot4 + 
+  scale_y_continuous(limits = c(0.2, max(long_df$value)))
+total_plot
