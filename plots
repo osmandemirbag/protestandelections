@@ -1,0 +1,912 @@
+load("df_agg.Rdata")
+
+#FIGURES
+pacman::p_load(geosphere, TRmaps, geometry, spdep, lme4, readxl, tidyr, dplyr, ggplot2, 
+               RColorBrewer, tidyverse, cleaner, rgdal, sp, spgwr, 
+               devtools, maptools, rgdal, sf, pracma,ggrepel)
+
+
+tr_nuts3[[28,2]] <- "afyon"
+tr_nuts3$CityCode <- tr_nuts3$name_eng
+tr_nuts3$CityCode <- tolower(tr_nuts3$CityCode)
+coef_p1 <- as.data.frame(full_join(coef_p1, tr_nuts3))
+pval_p1 <- as.data.frame(full_join(pval_p1, tr_nuts3))
+coef_p2 <- as.data.frame(full_join(coef_p2, tr_nuts3))
+pval_p2 <- as.data.frame(full_join(pval_p2, tr_nuts3))
+coef_p3 <- as.data.frame(full_join(coef_p3, tr_nuts3))
+pval_p3 <- as.data.frame(full_join(pval_p3, tr_nuts3))
+coef_p4 <- as.data.frame(full_join(coef_p4, tr_nuts3))
+pval_p4 <- as.data.frame(full_join(pval_p4, tr_nuts3))
+
+# find distance between two points
+geoDist <- function(lat1, lon1, lat2, lon2, units = "mi") {
+  # This function ouputs the (great circles) distance between to geographic
+  # points, using the Spherical Law of Cosines
+  #
+  # Args:
+  #   lon1: longitude for point 1
+  #   lat1: latitutde for point 1
+  #   lon2: longitude for point 2 (number or vector)
+  #   lat2: latitutde for point 2 (number or vector)
+  #
+  # Returns:
+  #   The distance (in miles) between the two given points.
+  
+  # set units
+  r <- 3959.873 # Earth mean radius (miles)
+  if (units == "km") {
+    r <- 6372.798
+  }
+  
+  # convert decimial degree input to radian degrees :
+  z <- (lat1 == lat2 & lon1 == lon2)  # logical vector
+  lon1.rad <- lon1 * (pi / 180)
+  lat1.rad <- lat1 * (pi / 180)
+  lon2.rad <- lon2 * (pi / 180)
+  lat2.rad <- lat2 * (pi / 180)
+  
+  distance <- (acos(sin(lat1.rad) * sin(lat2.rad) +
+                      cos(lat1.rad) * cos(lat2.rad) * cos(lon2.rad - lon1.rad)) * r)
+  
+  distance[z] <- 0  # Distance = 0 if lat and lon are identical
+  
+  return(distance) # Distance
+}
+
+# matrix of distances between many points
+geoDistMatrix <-
+  function(df, group=1, lon="lon", lat="lat", units = "mi") {
+    # Calculates the geodesic distance between two points specified by radian
+    # latitude/longitude using the Spherical Law of Cosines (slc).
+    # Args:
+    #   df: dataframe containing coordinates and group names
+    #   group: unique identifier for each set of coordinates; column in
+    #     dataframe to be used for dimension names.
+    #   lon: longitude column name (decimal degree only!)
+    #   lat: latitude column name (decimal degree only!)
+    #   units: "mi" for miles, or "km" for kilometers
+    #
+    # Returns:
+    #   An n by n matrix of distances between points (lower triangle values only).
+    
+    # Check for valid group, lon, and lat parameters
+    if (is.null(df[[lat]]) | is.null(df[[lon]])) {
+      stop("Invalid coordinate columns specified.")
+    }
+    if (is.null(df[[group]])) {
+      stop("Invalid group column specified.")
+    }
+    
+    # parse, clean, and prep data
+    coords <- unique(cbind(df[c(names(df[group]), lon, lat)])) # no dups
+    coords <- coords[order(coords[group]), ] # sort by group
+    n <- nrow(coords)
+    matrix.names = list(coords[[group]], coords[[group]])
+    distance.matrix <- matrix(nrow = n, ncol = n, dimnames = matrix.names)
+    
+    # calculate distances
+    if (n == 1) {
+      return(distance.matrix)
+    }
+    for (i in 1:n) {
+      j = 1:i
+      distance.matrix[i, j] = suppressWarnings(geoDist(coords[i, lat], coords[i, lon],
+                                                       coords[j, lat], coords[j, lon], units = units))
+      # distance.matrix[i, i] = 0  # replaces NA's with 0 for diagonal
+    }
+    return(distance.matrix)
+  }
+
+
+# calculates social distance from df of variables
+socDist <- function(df, group = "group", na.cases = "mean") {
+  # function for calculating social distance
+  # requires dataframe of ONLY the variables on which dist is to be
+  #   calculated
+  # Returns 'dist' type object
+  
+  ##### PREP DATA #####
+  df <- unique(df)              # keep only unique combinations
+  df <- sapply(df, as.numeric)  # convert factors to numeric
+  
+  # standardize each column
+  df <- apply(df, 2, scale)
+  
+  ##### CALCULATE DISTANCE #####
+  sdist <- dist(df)
+  
+  return(sdist)
+}
+
+
+# Convenience ftn for euclidean distance matrix
+eDist <- function(x) {
+  # x: vector for calculating distances
+  d <- dist(x, diag = T)
+  d <- as.matrix(d)
+  d[upper.tri(d)] <- NA
+  return(d)
+}
+
+# Break observations into bins of size N, find mean, then plot
+binPlot <- function(geo, edist, binsize = 1000, title, color="black", ...) {
+  # Plots mean of equal-N bins.
+  geov <- geo[lower.tri(geo)]
+  edistv <- edist[lower.tri(edist)]
+  dfall <- as.data.frame(cbind(geov, edistv))
+  dfall <- dfall[order(geov), ]
+  # plot by bins
+  # define min, max, and increment for bins
+  bins <- seq(0, length(geov), binsize)
+  mnd <- c()          # mean euclidean distance per bin
+  mng <- c()          # mean geographical distance per bin
+  for (i in 2:length(bins)) {
+    # mean euclidean distance in bin
+    mnd <- c(mnd, mean(dfall[bins[i - 1]:bins[i], "edistv"],
+                       na.rm = TRUE))
+    # mean geographic distance in bin
+    mng <- c(mng, mean(dfall[bins[i - 1]:bins[i], "geov"],
+                       na.rm = TRUE))
+  }
+  plot(mng, mnd,
+       type = "l", col = "black", lwd = 2,
+       ylab = "Mean difference",
+       xlab = "Geographical distance (miles)",
+       main = title,
+       ...
+  )
+}
+
+binPlot <- function(geo, edist, binsize = 1000, title, color="black", ...) {
+  # Plots mean of equal-N bins.
+  geov <- geo[lower.tri(geo)]
+  edistv <- edist[lower.tri(edist)]
+  dfall <- as.data.frame(cbind(geov, edistv))
+  dfall <- dfall[order(geov), ]
+  # plot by bins
+  # define min, max, and increment for bins
+  bins <- seq(0, length(geov), binsize)
+  mnd <- c()          # mean euclidean distance per bin
+  mng <- c()          # mean geographical distance per bin
+  sdmnd <- c()        # standard deviation of mean euclidean distance per bin
+  sdmng <- c()        # standard deviation of mean geographical distance per bin
+  for (i in 2:length(bins)) {
+    # mean euclidean distance in bin
+    mnd <- c(mnd, mean(dfall[bins[i - 1]:bins[i], "edistv"],
+                       na.rm = TRUE))
+    # mean geographic distance in bin
+    mng <- c(mng, mean(dfall[bins[i - 1]:bins[i], "geov"],
+                       na.rm = TRUE))
+    # standard deviation of mean euclidean distance in bin
+    sdmnd <- c(sdmnd, sd(dfall[bins[i - 1]:bins[i], "edistv"],
+                         na.rm = TRUE) / sqrt(length(bins[i - 1]:bins[i])))
+    # standard deviation of mean geographic distance in bin
+    sdmng <- c(sdmng, sd(dfall[bins[i - 1]:bins[i], "geov"],
+                         na.rm = TRUE) / sqrt(length(bins[i - 1]:bins[i])))
+  }
+  plot(mng, mnd,
+       type = "l", col = "black", lwd = 2,
+       ylab = "Mean difference",
+       xlab = "Geographical distance (miles)",
+       main = title,
+       ...
+  )
+  lines(mng, mnd + sdmnd, col = "red")
+  lines(mng, mnd - sdmnd, col = "red")
+  lines(mng + sdmng, mnd, col = "black")
+  lines(mng - sdmng, mnd, col = "black")
+}
+
+#load the data
+
+data("tr_nuts3")
+ggplot(tr_nuts3) + 
+  geom_sf()  
+tr_nuts3 <- as.data.frame(tr_nuts3)
+
+# Extract centroid of each multipolygon
+lat_long <- as.data.frame(st_coordinates(st_centroid(tr_nuts3$geometry)))
+lat_long$CityCode <- tr_nuts3$name_eng
+lat_long$CityCode <- tolower(lat_long$CityCode)
+lat_long[[28,3]] <- "afyon"
+
+# join the data with the lat_long dataframe
+df_merged <- left_join(df_agg, lat_long, by = "CityCode")
+
+# calculate geodesic distance matrix with pre-defined function
+geoDistMatrix <- geoDistMatrix(df_merged, group = "CityCode", lon = "X", lat = "Y", units = "km")
+
+# group by year and city code to get the desired bin
+df_merged1 <- df_merged %>% group_by(CityCode) %>% 
+  summarize(socasistpergdp = mean(socasistpergdp, na.rm = TRUE), 
+            av_unemp = mean(av_unemp, na.rm = TRUE),
+            incumbent = mean(incumbent, na.rm = TRUE),
+            n_weighted = mean(n_weighted, na.rm = TRUE))
+
+# calculate Euclidean distance matrix
+socasistpergdp <- eDist(df_merged1$socasistpergdp)
+Av_Unemp <- eDist(df_merged1$av_unemp)
+incumbent <- eDist(df_merged1$incumbent)
+n_weighted <- eDist(df_merged1$n_weighted)
+
+# Set the parameters for the plots
+par(mfrow = c(2, 2), mar = c(4.2, 4, 1.5, 2), mgp = c(2.1, 1, 0))
+
+# Set the bin size and label size
+bin <- 50
+labSize <- 1
+
+# Plot the culture event type
+binPlot(geo = geoDistMatrix, edist = socasistpergdp, binsize = bin, title = "Social Assistance Per GDP ", cex.lab = labSize)
+
+# Plot the Industrial_Action 
+binPlot(geo = geoDistMatrix, edist = Av_Unemp, binsize = bin, title = "Economic Grievances", cex.lab = labSize)
+
+# Plot the Total Number of Protests
+binPlot(geo = geoDistMatrix, edist = n_weighted, binsize = bin, title = "Protest Density", cex.lab = labSize)
+
+# Plot the incumbent event type
+binPlot(geo = geoDistMatrix, edist = incumbent, binsize = bin, title = "AKP Vote Share", cex.lab = labSize)
+
+#RE-ESF RESULT COEF AND P-VALUE MAPS
+
+p1 <- ggplot(coef_p1) + 
+  geom_sf(aes(geometry = geometry, fill=n_weighted) , show.legend = F)+
+  scale_fill_gradient(low = "black", high = "white",
+                      limits = c(-10, 0),
+                      breaks  = c(-10, -9.5, -9, -8.5, -8, -7.5, -7, -6.5, -6, -5.5, -5, -4.5, -4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0))+
+  theme_void()+
+  labs(title = "Effect of Protest Density on Incumbent Vote Share",
+       subtitle = "2007")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2 <- ggplot(coef_p2) + 
+  geom_sf(aes(geometry = geometry, fill=n_weighted))+
+  scale_fill_gradient(low = "black", high = "white",
+                      limits = c(-10, 0),
+                      breaks  = c(-10, -9.5, -9, -8.5, -8, -7.5, -7, -6.5, -6, -5.5, -5, -4.5, -4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0))+
+  theme_void()+
+  labs(subtitle = "2011")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 12),
+        legend.key.size = unit(2, "cm"))
+
+p3 <- ggplot(coef_p3) + 
+  geom_sf(aes(geometry = geometry, fill=n_weighted), show.legend = F)+
+  scale_fill_gradient(low = "black", high = "white",
+                      limits = c(-10, 0),
+                      breaks  = c(-10, -9.5, -9, -8.5, -8, -7.5, -7, -6.5, -6, -5.5, -5, -4.5, -4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0))+
+  theme_void()+
+  labs(subtitle = "June 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p4 <- ggplot(coef_p4) + 
+  geom_sf(aes(geometry = geometry, fill=n_weighted), show.legend = F)+
+  scale_fill_gradient(low = "black", high = "white",
+                      limits = c(-10, 0),
+                      breaks  = c(-10, -9.5, -9, -8.5, -8, -7.5, -7, -6.5, -6, -5.5, -5, -4.5, -4, -3.5, -3, -2.5, -2, -1.5, -1, -0.5, 0))+
+  theme_void()+
+  labs(subtitle = "November 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+n_weighted_coef_maps <- p1+p2+p3+p4
+
+
+
+#P VALUES
+p2_1 <- ggplot(pval_p1) +
+  geom_sf(aes(geometry = geometry, fill = cut(n_weighted, breaks = c(-Inf, 0.01, 0.05, Inf), 
+                                              labels = c("0.001***", "0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("gray25", "gray75", "white")) +
+  theme_void() +
+  labs(title = "P-Value Distribution of Protest Density on Incumbent Vote Share", subtitle = "2007")+
+  labs(fill = "Level of Significance", subtitle = "2007")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p2_2 <- ggplot(pval_p2) +
+  geom_sf(aes(geometry = geometry, fill = cut(n_weighted, breaks = c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                                              labels = c("0.001***", "0.01**", "0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("gray25", "gray50", "gray75", "white")) +
+  theme_void() +
+  labs(fill = "Level of Significance", subtitle = "2011")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2_3 <- ggplot(pval_p3) +
+  geom_sf(aes(geometry = geometry, fill = cut(n_weighted, breaks = c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                                              labels = c("0.001***", "0.01**", "0.05*", "Not significant"), include.lowest = TRUE))) +
+  scale_fill_manual(values = c("gray25", "gray50", "gray75", "white")) +
+  theme_void() +
+  labs(fill = "Level of Significance", subtitle = "June 2015")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16), legend.position = "bottom")
+
+
+
+p2_4 <- ggplot(pval_p1) +
+  geom_sf(aes(geometry = geometry, fill = cut(n_weighted, breaks = c(-Inf, 0.01, 0.05, Inf), 
+                                              labels = c("0.01**", "0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c( "gray50", "gray75", "white")) +
+  theme_void() +
+  labs(fill = "Level of Significance", subtitle = "November 2015")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+n_weighted_pval_maps <- p1+p2+p3+p4p2_1+p2_2+p2_3+p2_4
+
+#SOCASISTPERGDP COEFFICIENT AND PVALUE MAPS
+
+p1 <- ggplot(coef_p1) + 
+  geom_sf(aes(geometry = geometry, fill=socasistpergdp) , show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 7))+
+  theme_void()+
+  labs(title = "Effect of Social Assistance Received on Incumbent Vote Share",
+       subtitle = "2007")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2 <- ggplot(coef_p2) + 
+  geom_sf(aes(geometry = geometry, fill=socasistpergdp))+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 7))+
+  theme_void()+
+  labs(subtitle = "2011")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 12),
+        legend.key.size = unit(2, "cm"))
+
+p3 <- ggplot(coef_p3) + 
+  geom_sf(aes(geometry = geometry, fill=socasistpergdp), show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 7))+
+  theme_void()+
+  labs(subtitle = "June 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p4 <- ggplot(coef_p4) + 
+  geom_sf(aes(geometry = geometry, fill=socasistpergdp), show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 7))+
+  theme_void()+
+  labs(subtitle = "November 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+socasistpergdp_coef_maps <- p1+p2+p3+p4
+
+
+#P VALUES
+p2_1 <- ggplot(pval_p1) +
+  geom_sf(aes(geometry = geometry, fill = cut(socasistpergdp, breaks = c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                                              labels = c("0.001***", "0.01**", "0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("gray25", "gray50", "gray75", "white")) +
+  theme_void() +
+  labs(title = "P-Value Distribution of Social Assistance Received on Incumbent Vote Share",
+       subtitle = "2007", fill = "Level of Significance")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p2_2 <- ggplot(pval_p2) +
+  geom_sf(aes(geometry = geometry, fill = cut(socasistpergdp, breaks = c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                                              labels = c("0.001***", "0.01**", "0.05*", "Not significant"), include.lowest = TRUE))) +
+  scale_fill_manual(values = c("gray25", "gray50", "gray75", "white")) +
+  theme_void() +
+  
+  labs(subtitle = "2011", fill = "Level of Significance")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2_3 <- ggplot(pval_p3) +
+  geom_sf(aes(geometry = geometry, fill = cut(socasistpergdp, breaks = c(-Inf, 0.05, Inf), 
+                                              labels = c("0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("white")) +
+  theme_void() +
+  labs(subtitle = "June 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p2_4 <- ggplot(pval_p4) +
+  geom_sf(aes(geometry = geometry, fill = cut(socasistpergdp, breaks = c(-Inf, 0.05, Inf), 
+                                              labels = c("0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("white")) +
+  labs(subtitle = "November 2015")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+socasistpergdp_pval_maps <- p2_1+p2_2+p2_3+p2_4
+
+
+#ECONOMIC GRIEVANCES COEFFICIENTS AND P VALUES MAPS
+
+p1 <- ggplot(coef_p1) + 
+  geom_sf(aes(geometry = geometry, fill=av_unemp) , show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(-10, 14))+
+  theme_void()+
+  labs(title = "Effect of Economic Grievances on Incumbent Vote Share",
+       subtitle = "2007")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2 <- ggplot(coef_p2) + 
+  geom_sf(aes(geometry = geometry, fill=av_unemp))+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(-10, 14))+
+  theme_void()+
+  labs(subtitle = "2011")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 12),
+        legend.key.size = unit(2, "cm"))
+
+p3 <- ggplot(coef_p3) + 
+  geom_sf(aes(geometry = geometry, fill=av_unemp), show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(-10, 14))+
+  theme_void()+
+  labs(subtitle = "June 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p4 <- ggplot(coef_p4) + 
+  geom_sf(aes(geometry = geometry, fill=av_unemp), show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(-10, 14))+
+  theme_void()+
+  labs(subtitle = "November 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+av_unemp_coef_maps <- p1+p2+p3+p4
+
+
+#P VALUES
+p2_1 <- ggplot(pval_p1) +
+  geom_sf(aes(geometry = geometry, fill = cut(av_unemp, breaks = c(-Inf, 0.05, Inf), 
+                                              labels = c( "0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c( "white")) +
+  theme_void() +
+  labs(title = "P-Value Distribution of Economic Grievances on Incumbent Vote Share",
+       subtitle = "2007", fill = "Level of Significance")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p2_2 <- ggplot(pval_p2) +
+  geom_sf(aes(geometry = geometry, fill = cut(av_unemp, breaks = c(-Inf, 0.05, Inf), 
+                                              labels = c("0.05*", "Not significant"),  include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("white")) +
+  theme_void() +
+  
+  labs(subtitle = "2011", fill = "Level of Significance")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2_3 <- ggplot(pval_p3) +
+  geom_sf(aes(geometry = geometry, fill = cut(av_unemp, breaks = c(-Inf,  0.01, 0.05, Inf), 
+                                              labels = c("0.01**", "0.05*", "Not significant"), include.lowest = TRUE))) +
+  scale_fill_manual(values = c( "gray50", "gray75", "white")) +
+  theme_void() +
+  labs(subtitle = "June 2015",  fill = "Level of Significance")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16),
+        legend.position = "bottom")
+
+
+
+p2_4 <- ggplot(pval_p4) +
+  geom_sf(aes(geometry = geometry, fill = cut(av_unemp, breaks = c(-Inf,  0.01, 0.05, Inf), 
+                                              labels = c("0.01**", "0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c( "gray50", "gray75", "white"))+
+  labs(subtitle = "November 2015")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+av_unemp_pval_maps <- p2_1+p2_2+p2_3+p2_4
+
+
+#SOCECON COEF AND PVALUE MAPS
+
+p1 <- ggplot(coef_p1) + 
+  geom_sf(aes(geometry = geometry, fill=socecon) , show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 11))+
+  theme_void()+
+  labs(title = "Effect of Socioeconomic Development on Incumbent Vote Share",
+       subtitle = "2007")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2 <- ggplot(coef_p2) + 
+  geom_sf(aes(geometry = geometry, fill=socecon))+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 11))+
+  theme_void()+
+  labs(subtitle = "2011")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 12),
+        legend.key.size = unit(2, "cm"))
+
+p3 <- ggplot(coef_p3) + 
+  geom_sf(aes(geometry = geometry, fill=socecon), show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 11))+
+  theme_void()+
+  labs(subtitle = "June 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p4 <- ggplot(coef_p4) + 
+  geom_sf(aes(geometry = geometry, fill=socecon), show.legend = F)+
+  scale_fill_continuous(low = "black", high = "white",
+                        limits = c(0, 11))+
+  theme_void()+
+  labs(subtitle = "November 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+socecon_coef_maps <- p1+p2+p3+p4
+
+
+#P VALUES
+p2_1 <- ggplot(pval_p1) +
+  geom_sf(aes(geometry = geometry, fill = cut(socecon, breaks = c(-Inf, 0.01, 0.05, Inf), 
+                                              labels = c("0.01**", "0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("gray50", "gray75", "white")) +
+  theme_void() +
+  labs(title = "P-Value Distribution of Socioeconomic Development on Incumbent Vote Share",
+       subtitle = "2007", fill = "Level of Significance")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p2_2 <- ggplot(pval_p2) +
+  geom_sf(aes(geometry = geometry, fill = cut(socecon, breaks = c(-Inf, 0.001, 0.01, 0.05, Inf), 
+                                              labels = c("0.001***", "0.01**", "0.05*", "Not significant"), include.lowest = TRUE))) +
+  scale_fill_manual(values = c("gray25", "gray50", "gray75", "white")) +
+  theme_void() +
+  
+  labs(subtitle = "2011", fill = "Level of Significance")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+p2_3 <- ggplot(pval_p3) +
+  geom_sf(aes(geometry = geometry, fill = cut(socecon, breaks = c(-Inf, 0.05, Inf), 
+                                              labels = c("0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("gray75")) +
+  theme_void() +
+  labs(subtitle = "June 2015")+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+
+
+p2_4 <- ggplot(pval_p4) +
+  geom_sf(aes(geometry = geometry, fill = cut(socecon, breaks = c(-Inf, 0.05, Inf), 
+                                              labels = c("0.05*", "Not significant"), include.lowest = TRUE)), show.legend = F) +
+  scale_fill_manual(values = c("white")) +
+  labs(subtitle = "November 2015")+
+  theme_void()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        plot.subtitle = element_text(size = 20),
+        legend.text = element_text(size = 16))
+
+socecon_pval_maps <- p2_1+p2_2+p2_3+p2_4
+
+
+#FIELD MEASURE GRAPHS
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest"), ]
+
+library(ggplot2)
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_protest" = "Organization",  "s_protest" = "Strength")
+
+plot1 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Protest Density") +
+  labs(subtitle = "Changes in Field Measures: Protest Density on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_socasist", "s_socasist"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_socasist" = "Organization",  "s_socasist" = "Strength")
+
+plot2 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Social Assistance Received per GDP") +
+  labs(subtitle = "Changes in Field Measures: Social Assistance on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_unemp", "s_unemp"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_unemp" = "Organization",  "s_unemp" = "Strength")
+
+plot3 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Economic Grievances") +
+  labs(subtitle = "Changes in Field Measures: Economic Grievances on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+
+
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the three variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_socecon", "s_socecon"), ]
+
+# Define color and label for each variable
+legend_labels <- c("f_socecon" = "Organization",  "s_socecon" = "Strength")
+
+plot4 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
+  geom_line(size = 1) +
+  labs(x = "Election Cycles", y = "Value", linetype = "") +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015"))+
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  ggtitle("Socioeconomic Development") +
+  labs(subtitle = "Changes in Field Measures: Socioeconomic Development on Incumbent Voteshare") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16))
+plot1 + plot2 + plot3 + plot4
+
+
+
+library(ggplot2)
+
+# Reshape data into long format
+long_df <- reshape2::melt(field, id.vars = "period",
+                          variable.name = "var_type", value.name = "value")
+
+# Filter the data to keep only the variables of interest
+long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest", "f_socasist", "s_socasist", "f_unemp", "s_unemp", "f_socecon", "s_socecon"), ]
+
+# Plot 1
+plot1 <- ggplot(long_df[long_df$var_type %in% c("f_protest", "s_protest"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = "Value", linetype = NULL, color = NULL,
+       title = "Changes in Field Measures",
+       subtitle = "Protest Density") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+# Plot 2
+plot2 <- ggplot(long_df[long_df$var_type %in% c("f_socasist", "s_socasist"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = NULL, linetype = NULL, color = NULL,
+       subtitle = "Social Assistance per GDP") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 16),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+#plot 3
+plot3 <- ggplot(long_df[long_df$var_type %in% c("f_unemp", "s_unemp"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2, show.legend = FALSE) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = "Value", linetype = NULL, color = NULL,
+       subtitle = "Economic Grievances") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 20),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"))
+
+#plot 4
+plot4 <- ggplot(long_df[long_df$var_type %in% c("f_socecon", "s_socecon"), ], 
+                aes(x = period, y = value, linetype = var_type, color = var_type)) +
+  geom_line(size = 2) +
+  scale_x_continuous(labels = c("2007", "2011", "June 2015", "November 2015")) +
+  scale_linetype_manual(values = c("dotted", "dashed"), 
+                        labels = c("Organization", "Strength")) +
+  scale_color_manual(values = c("blue", "red"),
+                     labels = c("Organization", "Strength")) +
+  labs(x = NULL, y = NULL, linetype = NULL, color = NULL,
+       subtitle = "Socioeconomic Development") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        plot.subtitle = element_text(size = 14),
+        plot.caption = element_text(size = 10),
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        legend.text = element_text(size = 25),
+        axis.title = element_text(size = 16),
+        axis.text = element_text(size = 16, color = "black"),
+        axis.line.y = element_line(color = "black"),
+        axis.ticks.y = element_line(color = "black"))
+
+field_plot <- plot1 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot2  + scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot3 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) + plot4 + 
+  scale_y_continuous(limits = c(0.2, max(long_df$value)))
+
+
+
+
+
+
+
+
+
+
+
+
+
