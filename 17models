@@ -1,0 +1,1142 @@
+#REESF MODELS
+load("df_agg.Rdata")
+period1 <- df_agg %>% filter(period==1)
+period2 <- df_agg %>% filter(period==2)
+period3 <- df_agg %>% filter(period==3)
+period4 <- df_agg %>% filter(period==4)
+
+#standardize and normalize dataset PERIOD 1
+n_weighted <- period1$n_weighted
+period1$n_weighted <- nthroot(n_weighted, 3)
+
+socasistpergdp <- period1$socasistpergdp
+hist(nthroot(socasistpergdp, 3))
+period1$socasistpergdp <- nthroot(socasistpergdp, 3)
+
+socecon <- period1$socecon
+hist(log(socecon))
+period1$socecon <- log(socecon)
+
+av_unemp <- period1$av_unemp
+hist(log(av_unemp))
+period1$av_unemp <- log(period1$av_unemp)
+
+period1 <- period1 %>% mutate_at(c('n_weighted', 'socasistpergdp', "av_unemp", "socecon"), ~(scale(.) %>% as.vector))
+
+
+#standardıze PERIOD 2
+n_weighted <- period2$n_weighted
+period2$n_weighted <- nthroot(n_weighted, 3)
+
+socasistpergdp <- period2$socasistpergdp
+hist(nthroot(socasistpergdp, 3))
+period2$socasistpergdp <- nthroot(socasistpergdp, 3)
+
+socecon <- period2$socecon
+hist(log(socecon))
+period2$socecon <- log(socecon)
+
+av_unemp <- period2$av_unemp
+hist(log(av_unemp))
+period2$av_unemp <- log(period2$av_unemp)
+
+period2 <- period2 %>% mutate_at(c('n_weighted', 'socasistpergdp', "av_unemp", "socecon"), ~(scale(.) %>% as.vector))
+
+#standardize period3
+n_weighted <- period3$n_weighted
+period3$n_weighted <- nthroot(n_weighted, 3)
+
+socasistpergdp <- period3$socasistpergdp
+hist(nthroot(socasistpergdp, 3))
+period3$socasistpergdp <- nthroot(socasistpergdp, 3)
+
+socecon <- period3$socecon
+hist(log(socecon))
+period3$socecon <- log(socecon)
+
+av_unemp <- period3$av_unemp
+hist(log(av_unemp))
+period3$av_unemp <- log(period3$av_unemp)
+
+period3 <- period3 %>% mutate_at(c('n_weighted', 'socasistpergdp', "av_unemp", "socecon"), ~(scale(.) %>% as.vector))
+
+#standardize period4
+n_weighted <- period4$n_weighted
+period4$n_weighted <- nthroot(n_weighted, 3)
+
+socasistpergdp <- period4$socasistpergdp
+hist(nthroot(socasistpergdp, 3))
+period4$socasistpergdp <- nthroot(socasistpergdp, 3)
+
+socecon <- period4$socecon
+hist(log(socecon))
+period4$socecon <- log(socecon)
+
+av_unemp <- period4$av_unemp
+hist(log(av_unemp))
+period4$av_unemp <- log(period4$av_unemp)
+
+period4 <- period4 %>% mutate_at(c('n_weighted', 'socasistpergdp', "av_unemp", "socecon"), ~(scale(.) %>% as.vector))
+
+
+
+#MAPS
+data("tr_nuts3")
+ggplot(tr_nuts3) + 
+  geom_sf()  
+tr_nuts3 <- as.data.frame(tr_nuts3)
+
+# Extract centroid of each multipolygon
+lat_long <- as.data.frame(st_coordinates(st_centroid(tr_nuts3$geometry)))
+lat_long$CityCode <- tr_nuts3$name_eng
+lat_long$CityCode <- tolower(lat_long$CityCode)
+lat_long[[28,3]] <- "afyon"
+df_agg <- full_join(df_agg, lat_long)
+period1 <- full_join(period1, lat_long)
+period2 <- full_join(period2, lat_long)
+period3 <- full_join(period3, lat_long)
+period4 <- full_join(period4, lat_long)
+
+
+#17 MODELS for period1 
+
+coords <- cbind(period1$X, period1$Y)
+#MODEL 1: 
+x <- period1[ , "socecon"]
+xconst <- period1[ , c("n_weighted","av_unemp", "socasistpergdp", "kurdish")]
+y <- period1$incumbent
+meig <- meigen(coords)
+meig$sf
+
+mod1 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod1$e
+mod1
+
+#MODEL 2: 
+x <- period1[ , "av_unemp" ]
+xconst <- period1[ , c("socecon", "n_weighted", "socasistpergdp", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod2 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod2
+
+
+#MODEL 3: 
+x <- period1[ , c("socecon", "av_unemp" )]
+xconst <- period1[ , c("n_weighted", "socasistpergdp", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod3 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod3
+
+
+#MODEL 4: 
+x <- period1[ , "n_weighted" ]
+xconst <- period1[ , c("av_unemp", "socasistpergdp", "socecon", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod4 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod4
+
+
+#MODEL 5: 
+x <- period1[ , c("n_weighted","socecon")]
+xconst <- period1[ , c( "socasistpergdp", "av_unemp", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod5 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+
+mod5
+
+
+#MODEL 6: 
+x <- period1[ , c("n_weighted", "av_unemp")]
+xconst <- period1[ , c( "socasistpergdp", "socecon", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod6 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod6
+
+#MODEL 7: 
+x <- period1[ , c("n_weighted","socecon", "av_unemp")]
+xconst <- period1[ , c( "socasistpergdp", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod7 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod7
+
+#MODEL 8: 
+x <- period1[ , "socasistpergdp"]
+xconst <- period1[ , c("socecon", "av_unemp", "n_weighted", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod8 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod8
+
+#MODEL 9: 
+x <- period1[ , c("socecon","socasistpergdp" )]
+xconst <- period1[ , c("av_unemp","n_weighted", "kurdish" )]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod9 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod9
+
+#MODEL 10: 
+x <- period1[ , c("av_unemp", "socasistpergdp")]
+xconst <- period1[ , c("socecon",  "n_weighted", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod10 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod10
+
+#MODEL 11: 
+x <- period1[ , c("socecon","av_unemp", "socasistpergdp")]
+xconst <- period1[ , c("n_weighted", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod11 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod11
+
+#MODEL 12: 
+x <- period1[ , c("n_weighted", "socasistpergdp" )]
+xconst <- period1[ , c("socecon", "av_unemp", "kurdish" )]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod12 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod12
+
+#MODEL 13: 
+x <- period1[ , c("n_weighted",  "socasistpergdp" , "socecon")]
+xconst <- period1[ , c("av_unemp", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod13 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod13
+
+#MODEL 14: 
+x <- period1[ , c("n_weighted",  "av_unemp","socasistpergdp" )]
+xconst <- period1[ , c("socecon", "kurdish")]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod14 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod14
+
+#MODEL 15: 
+x <- period1[ , c("n_weighted",  "av_unemp", "socecon", "socasistpergdp")]
+xconst <- period1[ , "kurdish"]
+y <- period1$incumbent
+
+meig <- meigen(coords)
+mod15 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod15
+
+#MODEL 16 RANDOM INTERCEPT: 
+x <- period1[ , c("n_weighted",  "av_unemp", "socasistpergdp", "socecon")]
+xconst <- period1[ , "kurdish"]
+mod16 <-  resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod16 
+
+#MODEL 17 GLOBAL: 
+mod17 <- lm(incumbent ~ n_weighted  + av_unemp + socecon  + socasistpergdp + kurdish, data = period1)
+period1_modlist <- list(mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8, mod9, mod10, mod11, mod12, mod13, mod14, mod15, mod16)
+# Creating a list of binary variables
+vars <- lapply(1:4, function(i) c(0,1))
+
+# Creating all possible combinations of binary variables
+combinations <- expand.grid(vars)
+
+# Adding column names to the data frame
+colnames(combinations) <- c("socecon", "av_unemp", "n_weighted", "socasistpergdp")
+combinations$intercept <- 1
+
+combinations$model <- NA
+combinations[17,1:6 ] <- NA
+combinations[1, 6 ] <- "mod16"
+combinations$model[2:nrow(combinations)] <- paste0("mod", 1:17)
+combinations[17,6 ] <- "mod17"
+combinations[17,1:5 ] <- 0
+
+# Initialize an empty data frame to store the AIC and BIC values
+results <- data.frame(model = character(), AIC = numeric(), BIC = numeric(), stringsAsFactors = FALSE)
+
+# Loop through the models
+for (i in 1:16) {
+  # Get the current model
+  model_name <- paste0("mod", i)
+  model <- get(model_name)
+  
+  # Extract the AIC and BIC values from the data frame within the model list
+  aic <- model$e$stat[[4]]
+  bic <- model$e$stat[[5]]
+  
+  # Append the results to the data frame
+  results <- rbind(results, data.frame(model = model_name, AIC = aic, BIC = bic, stringsAsFactors = FALSE))
+}
+
+
+# Show the results
+results
+mod17_aicbic <- as.data.frame(t(c(AIC(mod17), BIC(mod17))))
+colnames(mod17_aicbic) <- c("AIC", "BIC")
+mod17_aicbic$model <- "mod17"
+results <- full_join(results, mod17_aicbic)
+
+mod6
+
+# Calculate the ΔAICc for each model
+
+results$delta_aic <- results$AIC - min(results$AIC)
+
+# Assign weights to each model based on the AICc
+results$aicc_weight <- exp(-0.5 * results$delta_aic) / sum(exp(-0.5 * results$delta_aic))
+
+# Rank the models based on their AICc weight
+results$rank_aicc <- order(results$aicc_weight, decreasing = TRUE)
+
+# Assign weights to each model based on the BIC
+results$bic_weight <- exp(-0.5 * (results$BIC - min(results$BIC))) / sum(exp(-0.5 * (results$BIC - min(results$BIC))))
+
+# Rank the models based on their BIC weight
+results$rank_bic <- order(results$bic_weight, decreasing = TRUE)
+
+# Display the results
+results
+
+results <- merge(results,combinations)
+
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+# Plot the tibble as a table
+knitr::kable(results_tibble, 
+             col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                           "socecon", "av_unemp", "n_weighted", "socasistpergdp", "intercept"), 
+             caption = "Spatially-varying random-intercept models")
+
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+kable(results_tibble, 
+      col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                    "Socio-Econ Dev.",  "Av. Unemp.", "Protest Density", "Social Assistance", "Intercept"), 
+      caption = "Period 1: 2002-2007", 
+      format = "html") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F) %>% 
+  add_header_above(c("Spatially-Varying Random-Intercept Models" = 13)) %>% 
+  add_footnote("Note: ✔️ indicates that the variable is spatially varied in the model.") %>% 
+  save_kable("results_table.html")
+
+#17 MODELS for period2 
+
+coords <- cbind(period2$X, period2$Y)
+#MODEL 1: 
+x <- period2[ , "socecon"]
+xconst <- period2[ , c("n_weighted","av_unemp", "socasistpergdp", "kurdish")]
+y <- period2$incumbent
+meig <- meigen(coords)
+
+mod1 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod1$e
+mod1
+
+#MODEL 2: 
+x <- period2[ , "av_unemp" ]
+xconst <- period2[ , c("socecon", "n_weighted", "socasistpergdp", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod2 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod2
+
+#MODEL 3: 
+x <- period2[ , c("socecon", "av_unemp" )]
+xconst <- period2[ , c("n_weighted", "socasistpergdp", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod3 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod3
+
+#MODEL 4: 
+x <- period2[ , "n_weighted" ]
+xconst <- period2[ , c("av_unemp", "socasistpergdp", "socecon", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod4 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod4
+
+#MODEL 5: 
+x <- period2[ , c("n_weighted","socecon")]
+xconst <- period2[ , c( "socasistpergdp", "av_unemp", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod5 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+
+mod5
+
+
+#MODEL 6: 
+x <- period2[ , c("n_weighted", "av_unemp")]
+xconst <- period2[ , c( "socasistpergdp", "socecon", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod6 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod6
+
+
+#MODEL 7: 
+x <- period2[ , c("n_weighted","socecon", "av_unemp")]
+xconst <- period2[ , c( "socasistpergdp", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod7 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod7
+
+
+#MODEL 8: 
+x <- period2[ , "socasistpergdp"]
+xconst <- period2[ , c("socecon", "av_unemp", "n_weighted", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod8 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod8
+
+
+#MODEL 9: 
+x <- period2[ , c("socecon","socasistpergdp" )]
+xconst <- period2[ , c("av_unemp","n_weighted", "kurdish" )]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod9 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod9
+
+
+#MODEL 10: 
+x <- period2[ , c("av_unemp", "socasistpergdp")]
+xconst <- period2[ , c("socecon",  "n_weighted", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod10 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod10
+
+
+#MODEL 11: 
+x <- period2[ , c("socecon","av_unemp", "socasistpergdp")]
+xconst <- period2[ , c("n_weighted", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod11 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod11
+
+
+#MODEL 12: 
+x <- period2[ , c("n_weighted", "socasistpergdp" )]
+xconst <- period2[ , c("socecon", "av_unemp", "kurdish" )]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod12 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod12
+
+#MODEL 13: 
+x <- period2[ , c("n_weighted",  "socasistpergdp" , "socecon")]
+xconst <- period2[ , c("av_unemp", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod13 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod13
+
+#MODEL 14: 
+x <- period2[ , c("n_weighted",  "av_unemp","socasistpergdp" )]
+xconst <- period2[ , c("socecon", "kurdish")]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod14 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod14
+
+#MODEL 15: 
+x <- period2[ , c("n_weighted",  "av_unemp", "socecon", "socasistpergdp")]
+xconst <- period2[ , "kurdish"]
+y <- period2$incumbent
+
+meig <- meigen(coords)
+mod15 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod15
+
+
+#MODEL 16 RANDOM INTERCEPT: 
+x <- period2[ , c("n_weighted",  "av_unemp", "socasistpergdp", "socecon")]
+xconst <- period2[ , "kurdish"]
+mod16 <-  resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod16 
+
+#MODEL 17 GLOBAL: 
+mod17 <- lm(incumbent ~ n_weighted  + av_unemp + socecon  + socasistpergdp + kurdish, data = period2)
+
+
+summary(mod17)
+check_model(mod17)
+mod9
+
+period2_modlist <- list(mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8, mod9, mod10, mod11, mod12, mod13, mod14, mod15, mod16)
+
+
+# Creating a list of binary variables
+vars <- lapply(1:4, function(i) c(0,1))
+
+# Creating all possible combinations of binary variables
+combinations <- expand.grid(vars)
+
+# Adding column names to the data frame
+colnames(combinations) <- c("socecon", "av_unemp", "n_weighted", "socasistpergdp")
+combinations$intercept <- 1
+
+combinations$model <- NA
+combinations[17,1:6 ] <- NA
+combinations[1, 6 ] <- "mod16"
+combinations$model[2:nrow(combinations)] <- paste0("mod", 1:17)
+combinations[17,6 ] <- "mod17"
+combinations[17,1:5 ] <- 0
+
+# Initialize an empty data frame to store the AIC and BIC values
+results <- data.frame(model = character(), AIC = numeric(), BIC = numeric(), stringsAsFactors = FALSE)
+
+# Loop through the models
+for (i in 1:16) {
+  # Get the current model
+  model_name <- paste0("mod", i)
+  model <- get(model_name)
+  
+  # Extract the AIC and BIC values from the data frame within the model list
+  aic <- model$e$stat[[4]]
+  bic <- model$e$stat[[5]]
+  
+  # Append the results to the data frame
+  results <- rbind(results, data.frame(model = model_name, AIC = aic, BIC = bic, stringsAsFactors = FALSE))
+}
+
+# Show the results
+results
+mod17_aicbic <- as.data.frame(t(c(AIC(mod17), BIC(mod17))))
+colnames(mod17_aicbic) <- c("AIC", "BIC")
+mod17_aicbic$model <- "mod17"
+results <- full_join(results, mod17_aicbic)
+
+
+# Calculate the ΔAICc for each model
+results$delta_aic <- results$AIC - min(results$AIC)
+
+# Assign weights to each model based on the AICc
+results$aicc_weight <- exp(-0.5 * results$delta_aic) / sum(exp(-0.5 * results$delta_aic))
+
+# Rank the models based on their AICc weight
+results$rank_aicc <- order(results$aicc_weight, decreasing = TRUE)
+
+# Assign weights to each model based on the BIC
+results$bic_weight <- exp(-0.5 * (results$BIC - min(results$BIC))) / sum(exp(-0.5 * (results$BIC - min(results$BIC))))
+
+# Rank the models based on their BIC weight
+results$rank_bic <- order(results$bic_weight, decreasing = TRUE)
+
+# Display the results
+results
+
+results <- merge(results,combinations)
+
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+# Plot the tibble as a table
+knitr::kable(results_tibble, 
+             col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                           "socecon", "av_unemp", "n_weighted", "socasistpergdp", "intercept"), 
+             caption = "Spatially-varying random-intercept models")
+
+library(kableExtra)
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+kable(results_tibble, 
+      col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                    "Socio-Econ Dev.",  "Av. Unemp.", "Protest Density", "Social Assistance", "Intercept"), 
+      caption = "Period 2: 2007-2011", 
+      format = "html") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F) %>% 
+  add_header_above(c("Spatially-Varying Random-Intercept Models" = 13)) %>% 
+  add_footnote("Note: ✔️ indicates that the variable is spatially varied in the model.") %>% 
+  save_kable("results_table2.html")
+
+
+mod4
+mod4
+mod10
+summary(mod17)
+check_model(mod17)
+mod16
+
+
+#17 MODELS for period3 
+
+coords <- cbind(period3$X, period3$Y)
+
+#MODEL 1: 
+x <- period3[ , "socecon"]
+xconst <- period3[ , c("n_weighted","av_unemp", "socasistpergdp", "kurdish")]
+y <- period3$incumbent
+meig <- meigen(coords)
+
+mod1 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod1$e
+mod1
+
+#MODEL 2: 
+x <- period3[ , "av_unemp" ]
+xconst <- period3[ , c("socecon", "n_weighted", "socasistpergdp", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod2 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod2
+
+
+#MODEL 3: 
+x <- period3[ , c("socecon", "av_unemp" )]
+xconst <- period3[ , c("n_weighted", "socasistpergdp", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod3 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod3
+
+
+#MODEL 4: 
+x <- period3[ , "n_weighted" ]
+xconst <- period3[ , c("av_unemp", "socasistpergdp", "socecon", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod4 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod4
+
+
+#MODEL 5: 
+x <- period3[ , c("n_weighted","socecon")]
+xconst <- period3[ , c( "socasistpergdp", "av_unemp", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod5 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+
+mod5
+
+
+#MODEL 6: 
+x <- period3[ , c("n_weighted", "av_unemp")]
+xconst <- period3[ , c( "socasistpergdp", "socecon", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod6 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod6
+
+
+#MODEL 7: 
+x <- period3[ , c("n_weighted","socecon", "av_unemp")]
+xconst <- period3[ , c( "socasistpergdp", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod7 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod7
+
+
+#MODEL 8: 
+x <- period3[ , "socasistpergdp"]
+xconst <- period3[ , c("socecon", "av_unemp", "n_weighted", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod8 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod8
+
+
+#MODEL 9: 
+x <- period3[ , c("socecon","socasistpergdp" )]
+xconst <- period3[ , c("av_unemp","n_weighted", "kurdish" )]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod9 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod9
+
+
+#MODEL 10: 
+x <- period3[ , c("av_unemp", "socasistpergdp")]
+xconst <- period3[ , c("socecon",  "n_weighted", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod10 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod10
+
+
+#MODEL 11: 
+x <- period3[ , c("socecon","av_unemp", "socasistpergdp")]
+xconst <- period3[ , c("n_weighted", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod11 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod11
+
+
+#MODEL 12: 
+x <- period3[ , c("n_weighted", "socasistpergdp" )]
+xconst <- period3[ , c("socecon", "av_unemp", "kurdish" )]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod12 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod12
+
+#MODEL 13: 
+x <- period3[ , c("n_weighted",  "socasistpergdp" , "socecon")]
+xconst <- period3[ , c("av_unemp", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod13 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod13
+
+#MODEL 14: 
+x <- period3[ , c("n_weighted",  "av_unemp","socasistpergdp" )]
+xconst <- period3[ , c("socecon", "kurdish")]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod14 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod14
+
+#MODEL 15: 
+x <- period3[ , c("n_weighted",  "av_unemp", "socecon", "socasistpergdp")]
+xconst <- period3[ , "kurdish"]
+y <- period3$incumbent
+
+meig <- meigen(coords)
+mod15 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod15
+
+
+#MODEL 16 RANDOM INTERCEPT: 
+x <- period3[ , c("n_weighted",  "av_unemp", "socasistpergdp", "socecon")]
+xconst <- period3[ , "kurdish"]
+mod16 <-  resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod16 
+
+#MODEL 17 GLOBAL: 
+mod17 <- lm(incumbent ~ n_weighted  + av_unemp + socecon  + socasistpergdp + kurdish, data = period3)
+
+period3_modlist <- list(mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8, mod9, mod10, mod11, mod12, mod13, mod14, mod15, mod16)
+
+
+
+# Creating a list of binary variables
+vars <- lapply(1:4, function(i) c(0,1))
+
+# Creating all possible combinations of binary variables
+combinations <- expand.grid(vars)
+
+# Adding column names to the data frame
+colnames(combinations) <- c("socecon", "av_unemp", "n_weighted", "socasistpergdp")
+combinations$intercept <- 1
+
+combinations$model <- NA
+combinations[17,1:6 ] <- NA
+combinations[1, 6 ] <- "mod16"
+combinations$model[2:nrow(combinations)] <- paste0("mod", 1:17)
+combinations[17,6 ] <- "mod17"
+combinations[17,1:5 ] <- 0
+
+# Initialize an empty data frame to store the AIC and BIC values
+results <- data.frame(model = character(), AIC = numeric(), BIC = numeric(), stringsAsFactors = FALSE)
+
+# Loop through the models
+for (i in 1:16) {
+  # Get the current model
+  model_name <- paste0("mod", i)
+  model <- get(model_name)
+  
+  # Extract the AIC and BIC values from the data frame within the model list
+  aic <- model$e$stat[[4]]
+  bic <- model$e$stat[[5]]
+  
+  # Append the results to the data frame
+  results <- rbind(results, data.frame(model = model_name, AIC = aic, BIC = bic, stringsAsFactors = FALSE))
+}
+
+# Show the results
+results
+mod17_aicbic <- as.data.frame(t(c(AIC(mod17), BIC(mod17))))
+colnames(mod17_aicbic) <- c("AIC", "BIC")
+mod17_aicbic$model <- "mod17"
+results <- full_join(results, mod17_aicbic)
+
+
+# Calculate the ΔAICc for each model
+results$delta_aic <- results$AIC - min(results$AIC)
+
+# Assign weights to each model based on the AICc
+results$aicc_weight <- exp(-0.5 * results$delta_aic) / sum(exp(-0.5 * results$delta_aic))
+
+# Rank the models based on their AICc weight
+results$rank_aicc <- order(results$aicc_weight, decreasing = TRUE)
+
+# Assign weights to each model based on the BIC
+results$bic_weight <- exp(-0.5 * (results$BIC - min(results$BIC))) / sum(exp(-0.5 * (results$BIC - min(results$BIC))))
+
+# Rank the models based on their BIC weight
+results$rank_bic <- order(results$bic_weight, decreasing = TRUE)
+
+# Display the results
+results
+
+results <- merge(results,combinations)
+
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+# Plot the tibble as a table
+knitr::kable(results_tibble, 
+             col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                           "socecon", "av_unemp", "n_weighted", "socasistpergdp", "intercept"), 
+             caption = "Spatially-varying random-intercept models")
+
+library(kableExtra)
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+kable(results_tibble, 
+      col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                    "Socio-Econ Dev.",  "Av. Unemp.", "Protest Density", "Social Assistance", "Intercept"), 
+      caption = "Period 3: 2011-2015", 
+      format = "html") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F) %>% 
+  add_header_above(c("Spatially-Varying Random-Intercept Models" = 13)) %>% 
+  add_footnote("Note: ✔️ indicates that the variable is spatially varied in the model.") %>% 
+  save_kable("results_table3.html")
+
+
+mod6
+
+
+#17 MODELS for period4 
+
+coords <- cbind(period4$X, period4$Y)
+
+#MODEL 1: 
+x <- period4[ , "socecon"]
+xconst <- period4[ , c("n_weighted","av_unemp", "socasistpergdp", "kurdish")]
+y <- period4$incumbent
+meig <- meigen(coords)
+
+mod1 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod1$e
+mod1
+
+#MODEL 2: 
+x <- period4[ , "av_unemp" ]
+xconst <- period4[ , c("socecon", "n_weighted", "socasistpergdp", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod2 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod2
+
+
+#MODEL 3: 
+x <- period4[ , c("socecon", "av_unemp" )]
+xconst <- period4[ , c("n_weighted", "socasistpergdp", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod3 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod3
+
+
+#MODEL 4: 
+x <- period4[ , "n_weighted" ]
+xconst <- period4[ , c("av_unemp", "socasistpergdp", "socecon", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod4 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod4
+
+
+#MODEL 5: 
+x <- period4[ , c("n_weighted","socecon")]
+xconst <- period4[ , c( "socasistpergdp", "av_unemp", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod5 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+
+mod5
+
+
+#MODEL 6: 
+x <- period4[ , c("n_weighted", "av_unemp")]
+xconst <- period4[ , c( "socasistpergdp", "socecon", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod6 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod6
+
+
+#MODEL 7: 
+x <- period4[ , c("n_weighted","socecon", "av_unemp")]
+xconst <- period4[ , c( "socasistpergdp", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod7 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod7
+
+
+#MODEL 8: 
+x <- period4[ , "socasistpergdp"]
+xconst <- period4[ , c("socecon", "av_unemp", "n_weighted", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod8 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod8
+
+
+#MODEL 9: 
+x <- period4[ , c("socecon","socasistpergdp" )]
+xconst <- period4[ , c("av_unemp","n_weighted", "kurdish" )]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod9 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod9
+
+
+#MODEL 10: 
+x <- period4[ , c("av_unemp", "socasistpergdp")]
+xconst <- period4[ , c("socecon",  "n_weighted", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod10 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod10
+
+
+#MODEL 11: 
+x <- period4[ , c("socecon","av_unemp", "socasistpergdp")]
+xconst <- period4[ , c("n_weighted", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod11 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod11
+
+
+#MODEL 12: 
+x <- period4[ , c("n_weighted", "socasistpergdp" )]
+xconst <- period4[ , c("socecon", "av_unemp", "kurdish" )]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod12 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod12
+
+#MODEL 13: 
+x <- period4[ , c("n_weighted",  "socasistpergdp" , "socecon")]
+xconst <- period4[ , c("av_unemp", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod13 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod13
+
+#MODEL 14: 
+x <- period4[ , c("n_weighted",  "av_unemp","socasistpergdp" )]
+xconst <- period4[ , c("socecon", "kurdish")]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod14 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+
+
+#MODEL 15: 
+x <- period4[ , c("n_weighted",  "av_unemp", "socecon", "socasistpergdp")]
+xconst <- period4[ , "kurdish"]
+y <- period4$incumbent
+
+meig <- meigen(coords)
+mod15 <- resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod15
+
+
+#MODEL 16 RANDOM INTERCEPT: 
+x <- period4[ , c("n_weighted",  "av_unemp", "socasistpergdp", "socecon")]
+xconst <- period4[ , "kurdish"]
+mod16 <-  resf_vc(y = y, x= x, xconst = xconst, x_nvc = T,  xconst_nvc = F, meig = meig, xconst_nvc_sel = F, x_sel = F )
+mod16 
+
+#MODEL 17 GLOBAL: 
+mod17 <- lm(incumbent ~ n_weighted  + av_unemp + socecon  + socasistpergdp + kurdish, data = period4)
+
+period4_modlist <- list(mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8, mod9, mod10, mod11, mod12, mod13, mod14, mod15, mod16)
+
+
+
+# Creating a list of binary variables
+vars <- lapply(1:4, function(i) c(0,1))
+
+# Creating all possible combinations of binary variables
+combinations <- expand.grid(vars)
+
+# Adding column names to the data frame
+colnames(combinations) <- c("socecon", "av_unemp", "n_weighted", "socasistpergdp")
+combinations$intercept <- 1
+
+combinations$model <- NA
+combinations[17,1:6 ] <- NA
+combinations[1, 6 ] <- "mod16"
+combinations$model[2:nrow(combinations)] <- paste0("mod", 1:17)
+combinations[17,6 ] <- "mod17"
+combinations[17,1:5 ] <- 0
+
+# Initialize an empty data frame to store the AIC and BIC values
+results <- data.frame(model = character(), AIC = numeric(), BIC = numeric(), stringsAsFactors = FALSE)
+
+# Loop through the models
+for (i in 1:16) {
+  # Get the current model
+  model_name <- paste0("mod", i)
+  model <- get(model_name)
+  
+  # Extract the AIC and BIC values from the data frame within the model list
+  aic <- model$e$stat[[4]]
+  bic <- model$e$stat[[5]]
+  
+  # Append the results to the data frame
+  results <- rbind(results, data.frame(model = model_name, AIC = aic, BIC = bic, stringsAsFactors = FALSE))
+}
+
+# Show the results
+results
+mod17_aicbic <- as.data.frame(t(c(AIC(mod17), BIC(mod17))))
+colnames(mod17_aicbic) <- c("AIC", "BIC")
+mod17_aicbic$model <- "mod17"
+results <- full_join(results, mod17_aicbic)
+
+
+# Calculate the ΔAICc for each model
+results$delta_aic <- results$AIC - min(results$AIC)
+
+# Assign weights to each model based on the AICc
+results$aicc_weight <- exp(-0.5 * results$delta_aic) / sum(exp(-0.5 * results$delta_aic))
+
+# Rank the models based on their AICc weight
+results$rank_aicc <- order(results$aicc_weight, decreasing = TRUE)
+
+# Assign weights to each model based on the BIC
+results$bic_weight <- exp(-0.5 * (results$BIC - min(results$BIC))) / sum(exp(-0.5 * (results$BIC - min(results$BIC))))
+
+# Rank the models based on their BIC weight
+results$rank_bic <- order(results$bic_weight, decreasing = TRUE)
+
+# Display the results
+results
+
+results <- merge(results,combinations)
+
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+# Plot the tibble as a table
+knitr::kable(results_tibble, 
+             col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                           "socecon", "av_unemp", "n_weighted", "socasistpergdp", "intercept"), 
+             caption = "Spatially-varying random-intercept models")
+
+library(kableExtra)
+results_tibble <- results %>% 
+  # Order the tibble by delta_aic
+  arrange(delta_aic) %>% 
+  # Convert binary variables to symbols
+  mutate_at(vars(socecon:intercept), 
+            funs(ifelse(., "✔️", "")))
+
+kable(results_tibble, 
+      col.names = c("Model", "AIC", "BIC", "delta_aic", "aicc_weight", "rank_aicc", "bic_weight", "rank_bic", 
+                    "Socio-Econ Dev.",  "Av. Unemp.", "Protest Density", "Social Assistance", "Intercept"), 
+      caption = "Period 4: 2015", 
+      format = "html") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = F) %>% 
+  add_header_above(c("Spatially-Varying Random-Intercept Models" = 13)) %>% 
+  add_footnote("Note: ✔️ indicates that the variable is spatially varied in the model.") %>% 
+  save_kable("results_table4.html")
+mod7
+rm(df, df_agg,model, combinations, lat_long, mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8, mod9, mod10, mod11,mod12, mod13, mod14,mod15,mod16, mod17,mod17_aicbic, results, results_tibble, vars, x, aic, av_unemp, bic, i, model_name, n_weighted, socasistpergdp, socecon, xconst, y)
+
