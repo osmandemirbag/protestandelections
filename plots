@@ -899,11 +899,6 @@ field_plot <- plot1 +  scale_y_continuous(limits = c(0.2, max(long_df$value))) +
   scale_y_continuous(limits = c(0.2, max(long_df$value)))
 
 
-
-
-
-library(ggplot2)
-
 # Reshape data into long format
 long_df <- reshape2::melt(field, id.vars = "period",
                           variable.name = "var_type", value.name = "value")
@@ -911,7 +906,6 @@ long_df <- reshape2::melt(field, id.vars = "period",
 # Filter the data to keep only the three variables of interest
 long_df <- long_df[long_df$var_type %in% c("f_protest", "s_protest"), ]
 
-library(ggplot2)
 
 # Reshape data into long format
 long_df <- reshape2::melt(field, id.vars = "period",
@@ -1029,10 +1023,6 @@ plot4 <- ggplot(long_df, aes(x = period, y = value, linetype = var_type)) +
         axis.title = element_text(size = 16),
         axis.text = element_text(size = 16))
 plot1 + plot2 + plot3 + plot4
-
-
-
-library(ggplot2)
 
 # Reshape data into long format
 long_df <- reshape2::melt(field, id.vars = "period",
