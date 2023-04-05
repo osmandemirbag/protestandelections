@@ -352,7 +352,7 @@ p2_4 <- ggplot(pval_p1) +
         plot.subtitle = element_text(size = 20),
         legend.text = element_text(size = 16))
 
-n_weighted_pval_maps <- p1+p2+p3+p4p2_1+p2_2+p2_3+p2_4
+n_weighted_pval_maps <- p2_1+p2_2+p2_3+p2_4
 
 #SOCASISTPERGDP COEFFICIENT AND PVALUE MAPS
 
