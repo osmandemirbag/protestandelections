@@ -587,6 +587,4 @@ moran_p4 <- moran_df_p4 %>%
   ungroup()
 
 rm(coef_df, coef_df_p4, const, const_p, moran_df, p4_aicc_df, period4_modlist, pval_df, pval_df_p4, results_list_p4, vary, vary_p)
-
-setwd("/Users/firuzetaner/Desktop/field_org/data")
 save(period1, period2, period3, period4, coef_p1,coef_p2, coef_p3, coef_p4, pval_p1, pval_p2, pval_p3, pval_p4, moran_p1, moran_p2,moran_p3, moran_p4, file = "model_averages.Rdata")
